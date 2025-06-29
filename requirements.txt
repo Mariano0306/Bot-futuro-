@@ -1,0 +1,6 @@
+requests
+time
+schedule
+python-binance
+ccxt
+ta
