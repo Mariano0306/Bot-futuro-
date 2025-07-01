@@ -1,4 +1,10 @@
-import ccxt import requests import time import datetime import ta import pandas as pd import json
+import ccxt 
+import requests 
+import time 
+import datetime 
+import ta 
+import pandas as pd 
+import json
 
 ============================
 
