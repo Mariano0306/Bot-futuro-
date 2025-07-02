@@ -8,7 +8,7 @@ import pandas as pd
 # ✅ TUS CLAVES API Bitget (ya colocadas)
 API_KEY = 'f0f6c20a92f847c14c5abcb1f57c9c8a'
 API_SECRET = 'a99e1c1a77b54c7f8b83bc2cfa9edcf6b17e05b7eb5a4be5c846432552b59fd4'
-API_PASSWORD = 'bitget2024'
+API_PASSWORD = 'Martomas1982'
 
 # ✅ Parámetros de operación (podés cambiar el capital cuando quieras)
 symbol = 'BTC/USDT'
