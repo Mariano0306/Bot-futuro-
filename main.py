@@ -4,21 +4,20 @@ import time
 import datetime
 import ta
 import pandas as pd
-import json
 
-# 🔐 Configuración de API Bitget
-API_KEY = 'TU_API_KEY'
-API_SECRET = 'TU_API_SECRET'
-API_PASSWORD = 'TU_PASSWORD'
+# ✅ TUS CLAVES API Bitget (ya colocadas)
+API_KEY = 'f0f6c20a92f847c14c5abcb1f57c9c8a'
+API_SECRET = 'a99e1c1a77b54c7f8b83bc2cfa9edcf6b17e05b7eb5a4be5c846432552b59fd4'
+API_PASSWORD = 'bitget2024'
 
-# 📊 Parámetros
-symbol = input("Criptomoneda a operar (ej: BTC/USDT): ")
-capital = float(input("Capital a usar en USDT: "))
+# ✅ Parámetros de operación (podés cambiar el capital cuando quieras)
+symbol = 'BTC/USDT'
+capital = 22.0  # Cambiá este número si querés operar con más USDT
 leverage = 3
 max_loss_pct = 3
 profit_partial_pct = 1.5
 
-# 📡 Conexión con Bitget
+# ✅ Configuración de la conexión con Bitget
 bitget = ccxt.bitget({
     'apiKey': API_KEY,
     'secret': API_SECRET,
@@ -26,12 +25,11 @@ bitget = ccxt.bitget({
     'enableRateLimit': True,
     'options': {'defaultType': 'swap'}
 })
-bitget.load_markets()  # 🚨 Importante para evitar error "markets not loaded"
 
-market = bitget.market(symbol)
+bitget.load_markets()
 bitget.set_leverage(leverage, symbol)
 
-# 📈 Funciones
+# ✅ Obtención de precio actual
 def get_price(symbol):
     try:
         ticker = bitget.fetch_ticker(symbol)
@@ -40,6 +38,7 @@ def get_price(symbol):
         print(f"[get_price ERROR] {e}")
         return None
 
+# ✅ Trae los últimos 100 velas de 1 minuto
 def fetch_ohlcv(symbol):
     try:
         data = bitget.fetch_ohlcv(symbol, timeframe='1m', limit=100)
@@ -49,6 +48,7 @@ def fetch_ohlcv(symbol):
         print(f"[fetch_ohlcv ERROR] {e}")
         return None
 
+# ✅ Señal con RSI
 def rsi_signal(df):
     try:
         df['rsi'] = ta.momentum.RSIIndicator(df['close']).rsi()
@@ -56,6 +56,7 @@ def rsi_signal(df):
     except:
         return 50
 
+# ✅ Revisa noticias importantes
 def get_news_signal():
     try:
         res = requests.get("https://cryptopanic.com/api/v1/posts/?auth_token=demo&currencies=BTC")
@@ -69,25 +70,25 @@ def get_news_signal():
         print(f"[NEWS ERROR] {e}")
         return False
 
+# ✅ Ejecuta orden
 def place_order(symbol, side, amount, stop_loss, take_profit):
     try:
         order = bitget.create_order(symbol=symbol, type='market', side=side, amount=amount)
-        print(f"[ORDEN] {side} ejecutada a mercado")
+        print(f"[ORDEN] {side.upper()} ejecutada a mercado")
         return order
     except Exception as e:
         print(f"[place_order ERROR] {e}")
         return None
 
+# ✅ Calcula stop dinámico
 def trailing_stop(entry_price, current_price, stop_price):
     gain = (current_price - entry_price) / entry_price * 100
     if gain >= profit_partial_pct:
-        new_stop = max(stop_price, entry_price)  # break even mínimo
-        if current_price > entry_price:
-            new_stop = current_price * 0.997  # trailing al 0.3%
+        new_stop = current_price * 0.997  # Ajuste dinámico
         return new_stop
     return stop_price
 
-# 🚀 Loop principal
+# ✅ Loop principal
 print("🤖 Iniciando bot de scalping conservador...\n")
 position_open = False
 entry_price = 0
