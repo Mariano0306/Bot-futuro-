@@ -6,17 +6,19 @@ import ta
 import pandas as pd
 import json
 
-# CONFIGURACIÓN
-API_KEY = 'bg_04d83d60492c9c4320dec5f030d4fb3b'
-API_SECRET = 'efaff97cdec19c00317754a8f8813d2ab9fdfbc8d3bc0e836ff551210e234404'
-API_PASSWORD = 'Martomas1982'
+# 🔐 Configuración de API Bitget
+API_KEY = 'TU_API_KEY'
+API_SECRET = 'TU_API_SECRET'
+API_PASSWORD = 'TU_PASSWORD'
 
-symbol = "BTC/USDT"  # Cambiá esto si querés otra cripto
-capital = 22         # Cambiá este valor para operar con otro capital
+# 📊 Parámetros
+symbol = input("Criptomoneda a operar (ej: BTC/USDT): ")
+capital = float(input("Capital a usar en USDT: "))
 leverage = 3
 max_loss_pct = 3
 profit_partial_pct = 1.5
 
+# 📡 Conexión con Bitget
 bitget = ccxt.bitget({
     'apiKey': API_KEY,
     'secret': API_SECRET,
@@ -24,11 +26,12 @@ bitget = ccxt.bitget({
     'enableRateLimit': True,
     'options': {'defaultType': 'swap'}
 })
+bitget.load_markets()  # 🚨 Importante para evitar error "markets not loaded"
 
 market = bitget.market(symbol)
 bitget.set_leverage(leverage, symbol)
 
-# FUNCIONES
+# 📈 Funciones
 def get_price(symbol):
     try:
         ticker = bitget.fetch_ticker(symbol)
@@ -78,15 +81,14 @@ def place_order(symbol, side, amount, stop_loss, take_profit):
 def trailing_stop(entry_price, current_price, stop_price):
     gain = (current_price - entry_price) / entry_price * 100
     if gain >= profit_partial_pct:
-        new_stop = entry_price
+        new_stop = max(stop_price, entry_price)  # break even mínimo
         if current_price > entry_price:
-            new_stop = current_price * 0.997
+            new_stop = current_price * 0.997  # trailing al 0.3%
         return new_stop
     return stop_price
 
-# LOOP PRINCIPAL
+# 🚀 Loop principal
 print("🤖 Iniciando bot de scalping conservador...\n")
-
 position_open = False
 entry_price = 0
 stop_price = 0
