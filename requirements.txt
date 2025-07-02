@@ -1,5 +1,5 @@
-requests
-schedule
 ccxt
-ta
+requests
 pandas
+ta
+schedule
