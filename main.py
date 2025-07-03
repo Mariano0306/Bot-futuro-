@@ -5,19 +5,19 @@ import datetime
 import ta
 import pandas as pd
 
-# ✅ TUS CLAVES API Bitget (ya colocadas)
+# ✅ CLAVES API DE BITGET
 API_KEY = 'bg_04d83d60492c9c4320dec5f030d4fb3b'
 API_SECRET = 'efaff97cdec19c00317754a8f8813d2ab9fdfbc8d3bc0e836ff551210e234404'
 API_PASSWORD = 'Martomas1982'
 
-# ✅ Parámetros de operación (podés cambiar el capital cuando quieras)
-symbol = 'BTC/USDT'
-capital = 22.0  # Cambiá este número si querés operar con más USDT
+# ✅ CONFIGURACIÓN GENERAL
+symbol = 'BTC/USDT:USDT'  # ⚠️ Importante para futuros en Bitget
+capital = 22.0
 leverage = 3
 max_loss_pct = 3
 profit_partial_pct = 1.5
 
-# ✅ Configuración de la conexión con Bitget
+# ✅ CONEXIÓN CON BITGET
 bitget = ccxt.bitget({
     'apiKey': API_KEY,
     'secret': API_SECRET,
@@ -29,7 +29,7 @@ bitget = ccxt.bitget({
 bitget.load_markets()
 bitget.set_leverage(leverage, symbol)
 
-# ✅ Obtención de precio actual
+# ✅ PRECIO ACTUAL
 def get_price(symbol):
     try:
         ticker = bitget.fetch_ticker(symbol)
@@ -38,7 +38,7 @@ def get_price(symbol):
         print(f"[get_price ERROR] {e}")
         return None
 
-# ✅ Trae los últimos 100 velas de 1 minuto
+# ✅ DATOS HISTÓRICOS DE PRECIO
 def fetch_ohlcv(symbol):
     try:
         data = bitget.fetch_ohlcv(symbol, timeframe='1m', limit=100)
@@ -48,7 +48,7 @@ def fetch_ohlcv(symbol):
         print(f"[fetch_ohlcv ERROR] {e}")
         return None
 
-# ✅ Señal con RSI
+# ✅ RSI
 def rsi_signal(df):
     try:
         df['rsi'] = ta.momentum.RSIIndicator(df['close']).rsi()
@@ -56,7 +56,7 @@ def rsi_signal(df):
     except:
         return 50
 
-# ✅ Revisa noticias importantes
+# ✅ NOTICIAS (Cryptopanic)
 def get_news_signal():
     try:
         res = requests.get("https://cryptopanic.com/api/v1/posts/?auth_token=demo&currencies=BTC")
@@ -70,25 +70,25 @@ def get_news_signal():
         print(f"[NEWS ERROR] {e}")
         return False
 
-# ✅ Ejecuta orden
-def place_order(symbol, side, amount, stop_loss, take_profit):
+# ✅ EJECUTAR ORDEN
+def place_order(symbol, side, amount):
     try:
         order = bitget.create_order(symbol=symbol, type='market', side=side, amount=amount)
-        print(f"[ORDEN] {side.upper()} ejecutada a mercado")
+        print(f"[ORDEN] {side.upper()} ejecutada")
         return order
     except Exception as e:
         print(f"[place_order ERROR] {e}")
         return None
 
-# ✅ Calcula stop dinámico
+# ✅ AJUSTE DE STOP DINÁMICO
 def trailing_stop(entry_price, current_price, stop_price):
     gain = (current_price - entry_price) / entry_price * 100
     if gain >= profit_partial_pct:
-        new_stop = current_price * 0.997  # Ajuste dinámico
+        new_stop = current_price * 0.997  # Mueve el stop al -0.3% del precio actual
         return new_stop
     return stop_price
 
-# ✅ Loop principal
+# ✅ LOOP PRINCIPAL
 print("🤖 Iniciando bot de scalping conservador...\n")
 position_open = False
 entry_price = 0
@@ -105,20 +105,20 @@ while True:
     rsi = rsi_signal(df)
     news = get_news_signal()
 
-    print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Precio: {price:.2f} | RSI: {rsi:.2f} | Noticia: {'✅' if news else '❌'}")
+    print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Precio: {price:.2f} | RSI: {rsi:.2f} | Noticias: {'✅' if news else '❌'}")
 
     if not position_open:
         if rsi < 30 and news:
             amount = (capital * leverage) / price
             entry_price = price
             stop_price = entry_price * (1 - max_loss_pct / 100)
-            place_order(symbol, 'buy', amount, stop_price, 0)
+            place_order(symbol, 'buy', amount)
             position_open = True
             print(f"📈 Entrada en {entry_price:.2f} | Stop inicial: {stop_price:.2f}")
     else:
         if price < stop_price:
-            print("🛑 Stop loss alcanzado. Cerrando posición.")
-            place_order(symbol, 'sell', amount, 0, 0)
+            print("🛑 Stop alcanzado. Cerrando posición.")
+            place_order(symbol, 'sell', amount)
             position_open = False
         else:
             stop_price = trailing_stop(entry_price, price, stop_price)
