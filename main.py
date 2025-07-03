@@ -6,7 +6,7 @@ import ta
 import pandas as pd
 
 # ✅ TUS CLAVES API Bitget (ya colocadas)
-API_KEY = ''bg_04d83d60492c9c4320dec5f030d4fb3b
+API_KEY = 'bg_04d83d60492c9c4320dec5f030d4fb3b'
 API_SECRET = 'efaff97cdec19c00317754a8f8813d2ab9fdfbc8d3bc0e836ff551210e234404'
 API_PASSWORD = 'Martomas1982'
 
