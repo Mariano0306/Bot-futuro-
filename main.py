@@ -1,127 +1,98 @@
-import ccxt
-import requests
 import time
-import datetime
-import ta
-import pandas as pd
+import math
+import requests
+from bitget.mix import Mix
+from bitget.market import Market
+from event import api_key, api_secret, api_passphrase
 
-# ✅ TUS CLAVES API de Bitget
-API_KEY = 'bg_04d83d60492c9c4320dec5f030d4fb3b'
-API_SECRET = 'efaff97cdec19c00317754a8f8813d2ab9fdfbc8d3bc0e836ff551210e234404'
-API_PASSWORD = 'Martomas1982'
+# === CONFIGURACIÓN ===
+SYMBOLS = ["BTCUSDT_UMCBL", "ETHUSDT_UMCBL"]
+MARGIN = 40  # USDT por operación
+LEVERAGE = 3
+STOP_LOSS_ROE = -0.025  # -2.5%
+ADJUST_SL_AT_PROFIT = 0.02  # Si la ganancia supera +2%, mover SL a +1%
+ADJUSTED_SL_ROE = 0.01
+TAKE_PROFIT_ROE = 0.04
 
-# ✅ Parámetros de operación
-symbol = 'BTC/USDT:USDT'  # CORRECTO para futuros con ccxt en Bitget
-capital = 22.0  # USDT por operación
-leverage = 3
-max_loss_pct = 3
-profit_partial_pct = 1.5
+# === INICIALIZACIÓN ===
+market = Market()
+mix = Mix(api_key, api_secret, api_passphrase)
 
-# ✅ Inicializar Bitget con configuración de futuros (swap)
-bitget = ccxt.bitget({
-    'apiKey': API_KEY,
-    'secret': API_SECRET,
-    'password': API_PASSWORD,
-    'enableRateLimit': True,
-    'options': {'defaultType': 'swap'}
-})
+def get_rsi(symbol):
+    candles = market.get_candles(symbol, "1m", limit=15)['data']
+    closes = [float(c[4]) for c in candles]
+    deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
+    gains = [delta if delta > 0 else 0 for delta in deltas]
+    losses = [-delta if delta < 0 else 0 for delta in deltas]
+    avg_gain = sum(gains) / 14
+    avg_loss = sum(losses) / 14
+    if avg_loss == 0:
+        return 100
+    rs = avg_gain / avg_loss
+    return 100 - (100 / (1 + rs))
 
-# ✅ Cargar mercados y setear apalancamiento
-bitget.load_markets()
-bitget.set_leverage(leverage, symbol)
-
-# ✅ Obtener precio actual
-def get_price(symbol):
+def get_news_sentiment():
     try:
-        ticker = bitget.fetch_ticker(symbol)
-        return ticker['last']
-    except Exception as e:
-        print(f"[get_price ERROR] {e}")
-        return None
-
-# ✅ OHLCV 1 minuto
-def fetch_ohlcv(symbol):
-    try:
-        data = bitget.fetch_ohlcv(symbol, timeframe='1m', limit=100)
-        df = pd.DataFrame(data, columns=['timestamp','open','high','low','close','volume'])
-        return df
-    except Exception as e:
-        print(f"[fetch_ohlcv ERROR] {e}")
-        return None
-
-# ✅ RSI
-def rsi_signal(df):
-    try:
-        df['rsi'] = ta.momentum.RSIIndicator(df['close']).rsi()
-        return df['rsi'].iloc[-1]
+        rss_url = "https://www.criptonoticias.com/feed/"
+        r = requests.get(rss_url)
+        content = r.text.lower()
+        keywords = ["caída", "regulación", "prohibición", "venta masiva", "fuga", "quiebra"]
+        if any(kw in content for kw in keywords):
+            return "negativo"
     except:
-        return 50
+        pass
+    return "neutral"
 
-# ✅ Noticias importantes
-def get_news_signal():
-    try:
-        res = requests.get("https://cryptopanic.com/api/v1/posts/?auth_token=demo&currencies=BTC")
-        news = res.json()
-        for post in news['results']:
-            title = post['title'].lower()
-            if any(x in title for x in ['etf', 'approval', 'hack', 'inflation', 'crash', 'bullish', 'bearish']):
-                return True
-        return False
-    except Exception as e:
-        print(f"[NEWS ERROR] {e}")
-        return False
+def get_position(symbol):
+    pos = mix.get_all_position("umcbl", symbol)['data']
+    for p in pos:
+        if p['holdSide'] == 'long':
+            return float(p['total']) if p['total'] else 0
+    return 0
 
-# ✅ Ejecutar orden
-def place_order(symbol, side, amount, stop_loss, take_profit):
-    try:
-        order = bitget.create_order(symbol=symbol, type='market', side=side, amount=amount)
-        print(f"[ORDEN] {side.upper()} ejecutada a mercado")
-        return order
-    except Exception as e:
-        print(f"[place_order ERROR] {e}")
-        return None
+def open_long(symbol):
+    mix.set_leverage("umcbl", symbol, LEVERAGE, "long")
+    mix.place_order("umcbl", symbol, "open_long", "market", sz=str(MARGIN), lever=str(LEVERAGE))
 
-# ✅ Stop dinámico
-def trailing_stop(entry_price, current_price, stop_price):
-    gain = (current_price - entry_price) / entry_price * 100
-    if gain >= profit_partial_pct:
-        new_stop = current_price * 0.997  # Ajuste dinámico
-        return new_stop
-    return stop_price
+def close_long(symbol):
+    mix.place_order("umcbl", symbol, "close_long", "market", sz="100", lever=str(LEVERAGE))
 
-# ✅ Loop principal
-print("🤖 Iniciando bot de scalping conservador...\n")
-position_open = False
-entry_price = 0
-stop_price = 0
-amount = 0
+def check_and_trade(symbol):
+    rsi = get_rsi(symbol)
+    print(f"{symbol} RSI: {rsi}")
+    news = get_news_sentiment()
+    print(f"Sentimiento de noticias: {news}")
+    pos = get_position(symbol)
 
+    if rsi < 30 and news != "negativo" and pos == 0:
+        print(f"Abriendo long en {symbol}")
+        open_long(symbol)
+        time.sleep(5)
+
+    elif pos > 0:
+        pos_info = mix.get_single_position("umcbl", symbol)['data']
+        roe = float(pos_info['unrealizedRoe']) / 100
+        print(f"{symbol} ROE actual: {roe:.2%}")
+
+        if roe <= STOP_LOSS_ROE:
+            print("Stop Loss alcanzado. Cerrando posición.")
+            close_long(symbol)
+
+        elif roe >= TAKE_PROFIT_ROE:
+            print("Take Profit alcanzado. Cerrando posición.")
+            close_long(symbol)
+
+        elif roe >= ADJUST_SL_AT_PROFIT:
+            new_stop = ADJUSTED_SL_ROE
+            print(f"Ajustando Stop Loss a {new_stop:.2%}")
+            # En Bitget real, usar trailing o update manual del SL
+
+# === BUCLE PRINCIPAL ===
 while True:
-    df = fetch_ohlcv(symbol)
-    if df is None:
-        time.sleep(60)
-        continue
+    for symbol in SYMBOLS:
+        try:
+            check_and_trade(symbol)
+        except Exception as e:
+            print(f"Error en {symbol}: {e}")
+    time.sleep(60)
 
-    price = get_price(symbol)
-    rsi = rsi_signal(df)
-    news = get_news_signal()
-
-    print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Precio: {price:.2f} | RSI: {rsi:.2f} | Noticia: {'✅' if news else '❌'}")
-
-    if not position_open:
-        if rsi < 30 and news:
-            amount = (capital * leverage) / price
-            entry_price = price
-            stop_price = entry_price * (1 - max_loss_pct / 100)
-            place_order(symbol, 'buy', amount, stop_price, 0)
-            position_open = True
-            print(f"📈 Entrada en {entry_price:.2f} | Stop inicial: {stop_price:.2f}")
-    else:
-        if price < stop_price:
-            print("🛑 Stop loss alcanzado. Cerrando posición.")
-            place_order(symbol, 'sell', amount, 0, 0)
-            position_open = False
-        else:
-            stop_price = trailing_stop(entry_price, price, stop_price)
-
-    time.sleep(60) 
