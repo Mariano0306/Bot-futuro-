@@ -1,0 +1,27 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build with Buildozer (Docker)
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/home/user/app \
+            -w /home/user/app \
+            kivy/buildozer:latest \
+            buildozer android debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: elmariano-apk
+          path: bin/*.apk
