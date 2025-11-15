@@ -27,7 +27,6 @@ jobs:
             zlib1g-dev libbz2-dev libgl1-mesa-dev libgles2-mesa-dev \
             libncurses5 libtinfo5 || true
 
-      # === INSTALAR ANDROID SDK MANUALMENTE ===
       - name: Install Android SDK + Build-tools
         run: |
           mkdir -p $HOME/android-sdk
@@ -63,7 +62,7 @@ jobs:
           export NDKAPI=21
           buildozer android debug
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: el-mariano-apk
