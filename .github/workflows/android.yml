@@ -9,51 +9,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install system dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y python3-pip python3-setuptools python3-venv \
-          zip unzip openjdk-17-jdk libtinfo6
+      - name: Build APK
+        uses: digreatbrian/buildozer-action@v2
+        with:
+          python-version: 3.8
+          buildozer-cmd: buildozer -v android debug
 
-    - name: Install Buildozer
-      run: |
-        pip install --upgrade pip
-        pip install buildozer cython
-
-    - name: Install Android SDK + NDK manually
-      run: |
-        mkdir -p $HOME/android-sdk/cmdline-tools
-        cd $HOME/android-sdk/cmdline-tools
-
-        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O sdk.zip
-        unzip sdk.zip
-        mv cmdline-tools latest
-        rm sdk.zip
-
-        export ANDROID_SDK_ROOT=$HOME/android-sdk
-        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-        export PATH=$ANDROID_SDK_ROOT/platform-tools:$PATH
-
-        yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses
-
-        sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
-          "platform-tools" "platforms;android-31" "build-tools;31.0.0" "ndk;25.1.8937393"
-
-    - name: Build APK
-      env:
-        ANDROIDSDK: $HOME/android-sdk
-        ANDROIDNDK: $HOME/android-sdk/ndk/25.1.8937393
-        ANDROIDNDKVER: 25.1.8937393
-        ANDROIDAPI: 31
-        ANDROIDMINAPI: 21
-      run: |
-        buildozer -v android debug
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: el-mariano-apk
-        path: bin/*.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: el-mariano-apk
+          path: ./bin/*.apk
