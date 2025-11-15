@@ -12,25 +12,30 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Install dependencies
+    - name: Install system deps
       run: |
         sudo apt update
         sudo apt install -y git zip unzip openjdk-17-jdk python3-venv python3-pip
 
     - name: Install Android SDK
       run: |
-        ANDROID_HOME=$HOME/android-sdk
-        mkdir -p $ANDROID_HOME/cmdline-tools/latest
-        cd $ANDROID_HOME/cmdline-tools/latest
+        export ANDROID_HOME=$HOME/android-sdk
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        cd $ANDROID_HOME/cmdline-tools
 
-        echo "Descargando commandline-tools..."
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk.zip
+        echo "Bajando SDK..."
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
 
-        echo "Extrayendo..."
-        unzip sdk.zip
-        rm sdk.zip
+        echo "Descomprimiendo..."
+        unzip tools.zip -d temp
+        rm tools.zip
 
-        echo "Configurando entorno..."
+        echo "Moviendo contenido a 'latest'..."
+        mkdir -p latest
+        mv temp/cmdline-tools/* latest/
+        rm -rf temp
+
+        echo "Exportando rutas..."
         echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
         echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
         echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
