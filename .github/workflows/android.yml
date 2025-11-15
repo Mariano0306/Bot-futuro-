@@ -3,11 +3,10 @@ name: Build APK - El Mariano
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout
@@ -22,47 +21,55 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential git zip unzip openjdk-11-jdk \
-            libffi-dev libssl-dev libsqlite3-dev libjpeg-dev \
-            zlib1g-dev libbz2-dev libgl1-mesa-dev libgles2-mesa-dev \
-            libncurses5 libtinfo5 || true
-
-      - name: Install Android SDK + Build-tools
-        run: |
-          mkdir -p $HOME/android-sdk
-          cd $HOME/android-sdk
-
-          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdtools.zip
-          unzip cmdtools.zip -d cmdline-tools
-          mkdir -p cmdline-tools/latest
-          mv cmdline-tools/cmdline-tools/* cmdline-tools/latest/
-          
-          yes | cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
-            "platform-tools" \
-            "platforms;android-33" \
-            "build-tools;33.0.2" \
-            "ndk;25.1.8937393"
-
-          echo "export ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "export ANDROIDNDK=$HOME/android-sdk/ndk/25.1.8937393" >> $GITHUB_ENV
-          echo "export ANDROIDAPI=33" >> $GITHUB_ENV
-          echo "export NDKAPI=21" >> $GITHUB_ENV
+            openjdk-17-jdk \
+            unzip \
+            zip \
+            libstdc++6 \
+            libffi-dev \
+            libssl-dev \
+            liblzma-dev
 
       - name: Install Buildozer
         run: |
-          python -m pip install --upgrade pip
-          pip install cython
-          pip install buildozer
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install cython==0.29.37 buildozer
+
+      - name: Install Android SDK (cmdline-tools + build-tools)
+        env:
+          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
+        run: |
+          # Crear carpeta donde Buildozer espera el SDK
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+
+          cd "$HOME"
+
+          # Descargar commandline-tools de Android
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+
+          # Descomprimir y mover a la ruta correcta
+          unzip -q cmdline-tools.zip -d cmdline-tools-temp
+          mv cmdline-tools-temp/cmdline-tools "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          rm -rf cmdline-tools-temp cmdline-tools.zip
+
+          # Instalar platform-tools, plataforma y build-tools dentro de ~/.buildozer
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-31" \
+            "build-tools;36.0.1"
+
+          # Archivo local.properties para que el gradle sepa dónde está el SDK
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > ./local.properties
 
       - name: Build APK
+        env:
+          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
         run: |
-          export ANDROIDSDK=$HOME/android-sdk
-          export ANDROIDNDK=$HOME/android-sdk/ndk/25.1.8937393
-          export ANDROIDAPI=33
-          export NDKAPI=21
-          buildozer android debug
+          source venv/bin/activate
+          buildozer -v android debug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: el-mariano-apk
