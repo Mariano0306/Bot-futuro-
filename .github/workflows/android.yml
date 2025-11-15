@@ -7,13 +7,13 @@ on:
 
 jobs:
   build:
-    # Usamos Ubuntu 20.04 porque tiene los paquetes que necesita Buildozer
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+        # Python compatible con buildozer
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -27,9 +27,7 @@ jobs:
             git \
             zip \
             unzip \
-            openjdk-8-jdk \
-            libncurses5 \
-            libtinfo5 \
+            openjdk-11-jdk \
             libffi-dev \
             libssl-dev \
             libsqlite3-dev \
@@ -37,12 +35,14 @@ jobs:
             zlib1g-dev \
             libbz2-dev \
             libgl1-mesa-dev \
-            libgles2-mesa-dev
+            libgles2-mesa-dev \
+            libncurses5 \
+            libtinfo5 || true
 
       - name: Install Buildozer
         run: |
           python -m pip install --upgrade pip
-          pip install buildozer
+          pip install buildozer cython
 
       - name: Build APK
         run: |
