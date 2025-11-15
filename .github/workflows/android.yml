@@ -16,7 +16,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y python3-pip python3-setuptools python3-venv \
-          zip unzip openjdk-17-jdk libncurses5
+          zip unzip openjdk-17-jdk libtinfo6
 
     - name: Install Buildozer
       run: |
@@ -27,6 +27,7 @@ jobs:
       run: |
         mkdir -p $HOME/android-sdk/cmdline-tools
         cd $HOME/android-sdk/cmdline-tools
+
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O sdk.zip
         unzip sdk.zip
         mv cmdline-tools latest
@@ -37,6 +38,7 @@ jobs:
         export PATH=$ANDROID_SDK_ROOT/platform-tools:$PATH
 
         yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses
+
         sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
           "platform-tools" "platforms;android-31" "build-tools;31.0.0" "ndk;25.1.8937393"
 
