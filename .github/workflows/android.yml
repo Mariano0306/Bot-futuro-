@@ -2,7 +2,12 @@ name: Build APK - El Mariano
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths:
+      - ".github/workflows/android.yml"
+      - "**/*.py"
+      - "buildozer.spec"
 
 jobs:
   build:
@@ -15,14 +20,13 @@ jobs:
       - name: Build APK using Buildozer Docker
         run: |
           docker run --rm \
-            -e BUILDOZER_ALLOW_ROOT=1 \
-            -v ${{ github.workspace }}:/build \
-            -w /build \
-            kivy/buildozer:latest \
-            buildozer android debug
+            -v ${{ github.workspace }}:/home/user/app \
+            -w /home/user/app \
+            kivy/buildozer \
+            /bin/bash -c "printf 'y\n' | buildozer android debug"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: El-Mariano-APK
+          name: ElMariano-apk
           path: bin/*.apk
