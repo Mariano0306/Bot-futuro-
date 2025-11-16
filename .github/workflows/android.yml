@@ -6,23 +6,24 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libtinfo5 libncurses5 git zip unzip
+      - name: Install docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        with:
-          workdir: .
-          buildozer_version: stable
-          command: android debug
+      - name: Build with Buildozer (Docker)
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app \
+            kivy/buildozer \
+            buildozer android debug
 
-      - name: Upload APK artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: el-mariano-apk
