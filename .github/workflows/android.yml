@@ -7,13 +7,17 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04   # ← FIX OBLIGATORIO
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Acción que instala Buildozer, SDK, NDK, etc. y corre el build
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libtinfo5
+
       - name: Build APK with Buildozer
         uses: digreatbrian/buildozer-action@v2
         with:
@@ -21,7 +25,6 @@ jobs:
           buildozer_version: stable
           command: android debug
 
-      # Publica el APK generado en la pestaña "Artifacts"
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
