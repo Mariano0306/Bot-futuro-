@@ -13,36 +13,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get date (for cache key)
-        id: get-date
-        run: echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
-
-      - name: Cache Buildozer global directory
-        uses: actions/cache@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          path: .buildozer_global
-          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+          python-version: "3.10"
 
-      - name: Cache Buildozer build directory
-        uses: actions/cache@v4
-        with:
-          path: .buildozer
-          key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
-
-      - name: Install AIDL and system dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libstdc++6 aidl
+          sudo apt-get install -y \
+            build-essential \
+            libstdc++6 \
+            unzip \
+            zip \
+            openjdk-17-jdk \
+            python3-pip \
+            aidl
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - name: Install buildozer
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython
+
+      - name: Build APK
+        uses: Kivy/buildozer-action@v1
         with:
-          command: buildozer android debug
-          buildozer_version: master
+          workdir: .
+          buildozer_version: latest
+          buildozer_command: android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: el-mariano-apk
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
