@@ -3,10 +3,7 @@ name: Build APK - El Mariano
 on:
   workflow_dispatch:
   push:
-    paths:
-      - "**/*.py"
-      - "buildozer.spec"
-      - ".github/workflows/android.yml"
+    branches: [ main ]
 
 jobs:
   build:
@@ -16,13 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Action ya preparada para buildozer, sin prompts interactivos
       - name: Build APK with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         with:
           workdir: .
           buildozer_version: stable
-          command: buildozer -v android debug
+          command: buildozer android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
