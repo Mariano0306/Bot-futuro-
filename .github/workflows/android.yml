@@ -7,26 +7,42 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04   # ← FIX OBLIGATORIO
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Get date (for cache key)
+        id: get-date
+        run: echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
+
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v4
+        with:
+          path: .buildozer_global
+          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+
+      - name: Cache Buildozer build directory
+        uses: actions/cache@v4
+        with:
+          path: .buildozer
+          key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
+
+      - name: Install AIDL and system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libtinfo5
+          sudo apt-get install -y build-essential libstdc++6 aidl
 
-      - name: Build APK with Buildozer
-        uses: digreatbrian/buildozer-action@v2
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
-          workdir: .
-          buildozer_version: stable
-          command: android debug
+          command: buildozer android debug
+          buildozer_version: master
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: el-mariano-apk
-          path: bin/*.apk
+          path: ${{ steps.buildozer.outputs.filename }}
