@@ -9,25 +9,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Podman
+      - name: Build APK using Buildozer Docker
         run: |
-          sudo apt-get update
-          sudo apt-get install -y podman
-
-      - name: Build with Buildozer (Podman)
-        env:
-          BUILDOZER_ALLOW_ROOT: "1"
-        run: |
-          podman run --rm -v ${{ github.workspace }}:/app \
+          docker run --rm \
             -e BUILDOZER_ALLOW_ROOT=1 \
-            docker.io/kivy/buildozer \
+            -v ${{ github.workspace }}:/build \
+            -w /build \
+            kivy/buildozer:latest \
             buildozer android debug
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: el-mariano-apk
+          name: El-Mariano-APK
           path: bin/*.apk
