@@ -1,0 +1,46 @@
+name: Build APK - El Mariano
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-pip python3-setuptools python3-virtualenv \
+            openjdk-17-jdk unzip git pkg-config \
+            libffi-dev libssl-dev liblzma-dev
+
+      - name: Install Buildozer
+        run: |
+          pip install --upgrade pip
+          pip install "cython<3"
+          pip install buildozer
+
+      - name: Preinstall Android SDK + build-tools 33.0.2
+        run: |
+          mkdir -p $HOME/.buildozer/android/platform
+          yes | sdkmanager "platforms;android-30" "build-tools;33.0.2" --sdk_root=$HOME/.buildozer/android/platform/android-sdk
+
+      - name: Build APK (debug)
+        env:
+          ANDROIDSDK: $HOME/.buildozer/android/platform/android-sdk
+          ANDROIDNDK: $HOME/.buildozer/android/platform/android-ndk
+        run: |
+          buildozer -v android debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: el-mariano-apk
+          path: bin/*.apk
