@@ -1,46 +1,52 @@
 name: Build APK - El Mariano
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
+    paths:
+      - '**.py'
+      - 'buildozer.spec'
+      - '.github/workflows/Build.yml'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+
+    env:
+      ANDROIDSDK: /home/runner/.buildozer/android/platform/android-sdk
+      ANDROIDNDK: /home/runner/.buildozer/android/platform/android-ndk
+      ANDROIDAPI: "33"
+      ANDROIDMINAPI: "21"
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            python3-pip python3-setuptools python3-virtualenv \
-            openjdk-17-jdk unzip git pkg-config \
-            libffi-dev libssl-dev liblzma-dev
+            build-essential \
+            git \
+            zip \
+            unzip \
+            openjdk-11-jdk \
+            libncurses5 \
+            libstdc++6 \
+            libffi-dev \
+            libssl-dev \
+            libsqlite3-dev
 
       - name: Install Buildozer
         run: |
-          pip install --upgrade pip
-          pip install "cython<3"
-          pip install buildozer
+          python -m pip install --upgrade pip
+          pip install buildozer cython==0.29.36
 
-      - name: Preinstall Android SDK + build-tools 33.0.2
+      - name: Build debug APK with Buildozer
         run: |
-          mkdir -p $HOME/.buildozer/android/platform
-          yes | sdkmanager "platforms;android-30" "build-tools;33.0.2" --sdk_root=$HOME/.buildozer/android/platform/android-sdk
-
-      - name: Build APK (debug)
-        env:
-          ANDROIDSDK: $HOME/.buildozer/android/platform/android-sdk
-          ANDROIDNDK: $HOME/.buildozer/android/platform/android-ndk
-        run: |
-          buildozer -v android debug
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: el-mariano-apk
-          path: bin/*.apk
+          yes | buildozer android debug
