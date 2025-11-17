@@ -20,7 +20,7 @@ jobs:
       - name: Build debug APK with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         env:
-          USER: runner          # <<< IMPORTANTE: que diga runner, NO user
+          USER: runner
         with:
           workdir: .
           buildozer_version: latest
