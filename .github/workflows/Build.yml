@@ -1,33 +1,30 @@
 name: Build APK - El Mariano
 
 on:
+  workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - "**/*.py"
       - "buildozer.spec"
-      - ".github/workflows/Build.yml"
-  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04   # importante: 22.04, no 24.04
-
-    env:
-      USER: runner          # evita el error de chown "invalid user: user"
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Build debug APK with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
+      - name: Build APK with Buildozer
+        uses: cuttlerat/buildozer-action@v1.1.0
         with:
-          workdir: .
           buildozer_version: stable
-          command: buildozer -v android debug
+          command: android debug
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: el-mariano-apk
+          name: el_mariano_apk
           path: bin/*.apk
