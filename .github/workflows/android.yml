@@ -2,52 +2,23 @@ name: Build APK - El Mariano
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      - name: Install system deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            git zip unzip openjdk-17-jdk \
-            python3 python3-pip python3-setuptools \
-            libffi-dev libssl-dev
+    - name: Build APK using official Buildozer Docker image
+      run: |
+        docker run --rm -v ${{ github.workspace }}:/build \
+        kivy/buildozer:latest \
+        buildozer -v android debug
 
-      - name: Install Buildozer
-        run: |
-          pip install --upgrade pip
-          pip install "cython<3"
-          pip install buildozer
-
-      # ⚠️ Importante: instalamos SDK y Build-Tools 33.0.2
-      - name: Pre-install Android SDK / Build-Tools 33.0.2
-        env:
-          BUILDOZER_WARN_ON_ROOT: "0"
-          BUILDOZER_ALLOW_ROOT: "1"
-        run: |
-          mkdir -p $HOME/.buildozer/android/platform
-          yes | buildozer android accept_sdk_license
-          yes | buildozer android update_sdk
-          $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager \
-            "build-tools;33.0.2" "platforms;android-30"
-
-      - name: Build debug APK with Buildozer
-        env:
-          BUILDOZER_WARN_ON_ROOT: "0"
-          BUILDOZER_ALLOW_ROOT: "1"
-        run: buildozer -v android debug
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: el-mariano-apk
-          path: bin/*.apk
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: el-mariano-apk
+        path: bin/*.apk
