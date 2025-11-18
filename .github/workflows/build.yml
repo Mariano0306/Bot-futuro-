@@ -1,6 +1,8 @@
 name: Build APK - El Mariano
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -25,8 +27,7 @@ jobs:
             zlib1g-dev \
             libncurses5 \
             libstdc++6:i386 \
-            libc6:i386 \
-            wget
+            libc6:i386
 
       - name: Install Buildozer
         run: |
@@ -37,11 +38,11 @@ jobs:
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-          unzip commandlinetools-linux-8512546_latest.zip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
+          unzip cmdtools.zip
+          rm cmdtools.zip
           mv cmdline-tools tools
           export ANDROID_HOME=$HOME/android-sdk
-          export ANDROID_SDK_ROOT=$ANDROID_HOME
           export PATH=$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools:$PATH
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
@@ -50,9 +51,8 @@ jobs:
         env:
           ANDROIDSDK: $HOME/android-sdk
           ANDROID_HOME: $HOME/android-sdk
-          ANDROID_SDK_ROOT: $HOME/android-sdk
-          PATH: $HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.0:$PATH
         run: |
+          export PATH=$ANDROID_HOME/platform-tools:$PATH
           buildozer -v android debug
 
       - name: Upload APK artifact
