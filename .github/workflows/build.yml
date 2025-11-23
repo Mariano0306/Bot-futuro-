@@ -1,8 +1,6 @@
 name: Build APK - El Mariano
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -38,9 +36,8 @@ jobs:
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
-          unzip cmdtools.zip
-          rm cmdtools.zip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+          unzip commandlinetools-linux-8512546_latest.zip
           mv cmdline-tools tools
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools:$PATH
@@ -51,11 +48,21 @@ jobs:
         env:
           ANDROIDSDK: $HOME/android-sdk
           ANDROID_HOME: $HOME/android-sdk
+          PATH: $HOME/android-sdk/platform-tools:$PATH
         run: |
-          export PATH=$ANDROID_HOME/platform-tools:$PATH
-          buildozer -v android debug
+          set -o pipefail
+          # Ejecuta buildozer, guarda TODO el log y muestra solo las últimas 200 líneas
+          buildozer android debug 2>&1 | tee buildozer.log | tail -n 200
+
+      - name: Upload Buildozer log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-log
+          path: buildozer.log
 
       - name: Upload APK artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ElMariano-APK
