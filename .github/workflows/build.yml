@@ -16,8 +16,8 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential \
             git \
+            build-essential \
             zip \
             unzip \
             openjdk-11-jdk \
@@ -27,15 +27,16 @@ jobs:
             libstdc++6:i386 \
             libc6:i386
 
-          # Verificación explícita de git
+          # Mostrar ruta y versión de git
+          which git
           git --version
 
       - name: Install Buildozer
         run: |
           python3 -m pip install --upgrade pip
           pip install "cython<3" buildozer==1.5.0
-          # Añadimos el directorio de los binarios de pip al PATH del workflow
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/bin:$PATH"
           buildozer --version
 
       - name: Install Android SDK + required Build-Tools
@@ -54,8 +55,11 @@ jobs:
         env:
           ANDROIDSDK: $HOME/android-sdk
           ANDROID_HOME: $HOME/android-sdk
-          PATH: $HOME/android-sdk/platform-tools:$PATH
+          PATH: /usr/bin:/bin:/usr/local/bin:$HOME/.local/bin:$HOME/android-sdk/platform-tools:$PATH
         run: |
+          echo "Verificando git dentro de Buildozer:"
+          which git || echo "Git NO está en PATH"
+          git --version || echo "No hay git"
           buildozer -v android debug
 
       - name: Upload APK artifact
