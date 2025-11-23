@@ -30,7 +30,7 @@ jobs:
       - name: Install Buildozer
         run: |
           python3 -m pip install --upgrade pip
-          pip install "cython<3" buildozer==1.5.0
+          python3 -m pip install "cython<3" buildozer==1.5.0
 
       - name: Install Android SDK + required Build-Tools
         run: |
@@ -42,7 +42,7 @@ jobs:
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools:$PATH
           yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+          yes | sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
 
       - name: Build APK (debug)
         env:
@@ -50,19 +50,9 @@ jobs:
           ANDROID_HOME: $HOME/android-sdk
           PATH: $HOME/android-sdk/platform-tools:$PATH
         run: |
-          set -o pipefail
-          # Ejecuta buildozer, guarda TODO el log y muestra solo las últimas 200 líneas
-          buildozer android debug 2>&1 | tee buildozer.log | tail -n 200
-
-      - name: Upload Buildozer log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: buildozer-log
-          path: buildozer.log
+          buildozer -v android debug
 
       - name: Upload APK artifact
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ElMariano-APK
