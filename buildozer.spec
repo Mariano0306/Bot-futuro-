@@ -1,22 +1,69 @@
-[app]
-title = El Mariano
-package.name = elmariano
-package.domain = org.agro
-source.dir = .
-source.include_exts = py,png,jpg,kv
-version = 1.0
+name: Build APK - El Mariano
 
-requirements = python3, kivy, plyer, kivy_garden.mapview, certifi, requests
-garden_requirements = mapview
+on:
+  workflow_dispatch:
 
-p4a.branch = master
-orientation = landscape
-fullscreen = 0
+jobs:
+  build:
+    runs-on: ubuntu-22.04
 
-android.permissions = ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION,INTERNET,ACCESS_NETWORK_STATE
-android.accept_sdk_license = True
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-[buildozer]
-log_level = 2
-warn_on_root = 0
-build_dir = .buildozer
+      - name: Install system dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            git \
+            zip \
+            unzip \
+            openjdk-11-jdk \
+            python3-pip \
+            zlib1g-dev \
+            libncurses5 \
+            libstdc++6:i386 \
+            libc6:i386
+
+      - name: Install Buildozer
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install "cython<3" buildozer==1.5.0
+
+      - name: Install Android SDK + required Build-Tools
+        run: |
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+          unzip commandlinetools-linux-8512546_latest.zip
+          mv cmdline-tools tools
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools:$PATH
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+
+      - name: Build APK (debug)
+        env:
+          ANDROIDSDK: $HOME/android-sdk
+          ANDROID_HOME: $HOME/android-sdk
+          PATH: $HOME/android-sdk/platform-tools:$PATH
+        run: |
+          set -o pipefail
+          # Ejecuta buildozer, guarda TODO el log y muestra solo las últimas 200 líneas
+          buildozer android debug 2>&1 | tee buildozer.log | tail -n 200
+
+      - name: Upload Buildozer log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-log
+          path: buildozer.log
+
+      - name: Upload APK artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ElMariano-APK
+          path: bin/*.apk
