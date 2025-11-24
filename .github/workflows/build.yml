@@ -11,61 +11,71 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
       - name: Install system dependencies
         run: |
-          sudo apt update
-          sudo apt install -y \
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
             git \
             zip \
             unzip \
-            openjdk-17-jdk \
-            python3-dev \
+            openjdk-11-jdk \
             python3-pip \
-            python3-setuptools \
-            libffi-dev \
-            libssl-dev \
-            libsqlite3-dev \
             zlib1g-dev \
-            libncurses5-dev \
-            libncursesw5-dev \
-            libreadline-dev \
-            libgdbm-dev \
-            libbz2-dev
+            libncurses5 \
+            libstdc++6:i386 \
+            libc6:i386
 
-      - name: Install Buildozer + Python deps
+      - name: Install Buildozer
         run: |
           python3 -m pip install --upgrade pip
           pip install "cython<3" buildozer==1.5.0
-          pip install kivy kivy_garden.mapview plyer
 
-      - name: Install Android SDK + Build-tools
+      - name: Install Android SDK and Build-Tools
+        env:
+          ANDROID_SDK_ROOT: $HOME/android-sdk
         run: |
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          mkdir -p $ANDROID_SDK_ROOT
-          cd $ANDROID_SDK_ROOT
+          # Crear carpeta base del SDK
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+          cd "$ANDROID_SDK_ROOT/cmdline-tools"
 
-          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdtools.zip
-          unzip cmdtools.zip -d cmdline-tools
-          mkdir -p cmdline-tools/latest
-          mv cmdline-tools/cmdline-tools/* cmdline-tools/latest/
+          # Bajar commandline tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+          unzip -q commandlinetools-linux-8512546_latest.zip
+          mv cmdline-tools tools
 
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
-          yes | sdkmanager --licenses
-          sdkmanager "platforms;android-33" "platform-tools" "build-tools;33.0.2"
+          # Variables de entorno para sdkmanager
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          export PATH="$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
+
+          # Aceptar licencias
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses
+
+          # Instalar componentes necesarios
+          sdkmanager --sdk_root="$ANDROID_HOME" \
+            "platform-tools" \
+            "platforms;android-33" \
+            "build-tools;33.0.2" \
+            "build-tools;36.1.0"
+
+          # Hacer que Buildozer use este SDK en su ruta por defecto
+          mkdir -p "$HOME/.buildozer/android/platform"
+          if [ ! -d "$HOME/.buildozer/android/platform/android-sdk" ]; then
+            ln -s "$ANDROID_HOME" "$HOME/.buildozer/android/platform/android-sdk"
+          fi
 
       - name: Build APK (debug)
+        env:
+          ANDROIDSDK: $HOME/android-sdk
+          ANDROID_HOME: $HOME/android-sdk
+          ANDROID_SDK_ROOT: $HOME/android-sdk
+          PATH: $HOME/android-sdk/platform-tools:$PATH
         run: |
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
           buildozer -v android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ElMariano-APK
+          name: ElMariano-debug-apk
           path: bin/*.apk
