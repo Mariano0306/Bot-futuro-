@@ -1,51 +1,51 @@
 [app]
-# Nombre que se verá en el teléfono
+# Nombre visible de la app
 title = El Mariano
 
-# Nombre interno del paquete
+# Nombre interno de paquete
 package.name = elmariano
 package.domain = org.mariano
 
-# Directorio donde está tu main.py (la raíz del repo)
+# Carpeta donde está main.py
 source.dir = .
 source.include_exts = py,kv,png,jpg,jpeg,svg,ttf,otf,wav,ogg,mp3
 
-# Versión de la app
+# Versión
 version = 0.1
 
-# Requisitos de Python para una app Kivy sencilla
-requirements = python3,kivy
+# LIBRERÍAS QUE USA TU main.py
+requirements = python3,kivy,kivy_garden.mapview,plyer
 
-# Archivo principal de tu app
+# Archivo principal
 source.main = main.py
 
-# Orientación
+# Orientación horizontal
 orientation = landscape
 
 # Pantalla completa
 fullscreen = 1
 
-# Nivel de log (2 = más detallado, útil para ver el error real)
+# Permisos Android (GPS + internet para los mapas)
+android.permissions = INTERNET,ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION
+
+# Nivel de log (útil para ver errores reales)
 log_level = 2
 
-# Icono (si no tenés, esto se ignora)
-#icon.filename = %(source.dir)s/icon.png
 
-# --------- CONFIG ANDROID ----------
 [buildozer]
 log_level = 2
 
+
 [app:android]
-# API objetivo
+# API y NDK (lo que ya estaba usando tu build)
 android.api = 33
 android.minapi = 21
 
-# NDK que está bajando Buildozer en tu log
 android.ndk = 25b
 android.ndk_api = 21
 
-# Arquitecturas que soporta tu APK
+# Arquitecturas soportadas
 android.archs = arm64-v8a, armeabi-v7a
 
-# Para usar gradle (es lo estándar hoy)
+# Usar Gradle
 android.build_type = gradle
