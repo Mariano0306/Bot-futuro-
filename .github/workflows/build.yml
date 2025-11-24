@@ -9,61 +9,64 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
       - name: Install system dependencies
         run: |
-          sudo dpkg --add-architecture i386
-          sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt update
+          sudo apt install -y \
             git \
-            build-essential \
             zip \
             unzip \
-            openjdk-11-jdk \
+            openjdk-17-jdk \
+            python3-dev \
             python3-pip \
+            python3-setuptools \
+            libffi-dev \
+            libssl-dev \
+            libsqlite3-dev \
             zlib1g-dev \
-            libncurses5 \
-            libstdc++6:i386 \
-            libc6:i386
+            libncurses5-dev \
+            libncursesw5-dev \
+            libreadline-dev \
+            libgdbm-dev \
+            libbz2-dev
 
-          # Mostrar ruta y versión de git
-          which git
-          git --version
-
-      - name: Install Buildozer
+      - name: Install Buildozer + Python deps
         run: |
           python3 -m pip install --upgrade pip
           pip install "cython<3" buildozer==1.5.0
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          export PATH="$HOME/.local/bin:$PATH"
-          buildozer --version
+          pip install kivy kivy_garden.mapview plyer
 
-      - name: Install Android SDK + required Build-Tools
+      - name: Install Android SDK + Build-tools
         run: |
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-          unzip commandlinetools-linux-8512546_latest.zip
-          mv cmdline-tools tools
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools:$PATH
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          mkdir -p $ANDROID_SDK_ROOT
+          cd $ANDROID_SDK_ROOT
+
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdtools.zip
+          unzip cmdtools.zip -d cmdline-tools
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/cmdline-tools/* cmdline-tools/latest/
+
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
           yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+          sdkmanager "platforms;android-33" "platform-tools" "build-tools;33.0.2"
 
       - name: Build APK (debug)
-        env:
-          ANDROIDSDK: $HOME/android-sdk
-          ANDROID_HOME: $HOME/android-sdk
-          PATH: /usr/bin:/bin:/usr/local/bin:$HOME/.local/bin:$HOME/android-sdk/platform-tools:$PATH
         run: |
-          echo "Verificando git dentro de Buildozer:"
-          which git || echo "Git NO está en PATH"
-          git --version || echo "No hay git"
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
+
           buildozer -v android debug
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: ElMariano-APK
           path: bin/*.apk
