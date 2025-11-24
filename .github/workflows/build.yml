@@ -23,7 +23,7 @@ jobs:
             openjdk-17-jdk \
             python3-pip \
             zlib1g-dev \
-            libncurses5 \
+            libncurses6 \
             libstdc++6:i386 \
             libc6:i386
 
@@ -39,11 +39,9 @@ jobs:
           mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
           cd "$ANDROID_SDK_ROOT/cmdline-tools"
 
-          # Descargar commandline tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q commandlinetools-linux-11076708_latest.zip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
+          unzip -q tools.zip
 
-          # Google exige la carpeta "latest/"
           mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
           mv cmdline-tools/* "$ANDROID_SDK_ROOT/cmdline-tools/latest/"
 
@@ -54,10 +52,8 @@ jobs:
           sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
             "platform-tools" \
             "platforms;android-33" \
-            "build-tools;33.0.2" \
-            "build-tools;36.1.0"
+            "build-tools;33.0.2"
 
-          # Crear enlace para Buildozer
           mkdir -p "$HOME/.buildozer/android/platform"
           ln -sf "$ANDROID_SDK_ROOT" "$HOME/.buildozer/android/platform/android-sdk"
 
