@@ -28,24 +28,29 @@ fullscreen = 1
 # Permisos Android (GPS + internet para los mapas)
 android.permissions = INTERNET,ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION
 
-# Nivel de log (útil para ver errores reales)
+# Nivel de log
 log_level = 2
 
-
-[buildozer]
-log_level = 2
-
-
-[app:android]
-# API y NDK (lo que ya estaba usando tu build)
+# ---------- CONFIG ANDROID ----------
 android.api = 33
 android.minapi = 21
-
+android.sdk = 33
 android.ndk = 25b
 android.ndk_api = 21
 
 # Arquitecturas soportadas
-android.archs = arm64-v8a, armeabi-v7a
+android.archs = arm64-v8a,armeabi-v7a
 
 # Usar Gradle
 android.build_type = gradle
+
+# Aceptar licencias del SDK automáticamente
+android.accept_sdk_license = True
+
+# Fijar versión de build-tools (para que encuentre aidl)
+android.build_tools_version = 33.0.2
+# ------------------------------------
+
+
+[buildozer]
+log_level = 2
