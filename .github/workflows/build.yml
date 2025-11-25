@@ -1,11 +1,13 @@
 name: Build APK - El Mariano
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repo
@@ -13,60 +15,27 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential \
-            git \
-            zip \
-            unzip \
-            openjdk-17-jdk \
-            python3-pip \
-            zlib1g-dev \
-            libncurses6 \
-            libstdc++6:i386 \
-            libc6:i386
+            python3-setuptools python3-pip \
+            git openjdk-17-jdk \
+            libffi-dev libssl-dev \
+            pkg-config
 
       - name: Install Buildozer
         run: |
           python3 -m pip install --upgrade pip
-          pip install "cython<3" buildozer==1.5.0
-
-      - name: Install Android SDK and Build-Tools
-        env:
-          ANDROID_SDK_ROOT: $HOME/android-sdk
-        run: |
-          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
-          cd "$ANDROID_SDK_ROOT/cmdline-tools"
-
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
-          unzip -q tools.zip
-
-          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
-          mv cmdline-tools/* "$ANDROID_SDK_ROOT/cmdline-tools/latest/"
-
-          export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH"
-
-          yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses
-
-          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
-            "platform-tools" \
-            "platforms;android-33" \
-            "build-tools;33.0.2"
-
-          mkdir -p "$HOME/.buildozer/android/platform"
-          ln -sf "$ANDROID_SDK_ROOT" "$HOME/.buildozer/android/platform/android-sdk"
+          python3 -m pip install "cython==0.29.36"
+          python3 -m pip install buildozer
 
       - name: Build APK (debug)
         env:
-          ANDROID_HOME: $HOME/android-sdk
-          ANDROID_SDK_ROOT: $HOME/android-sdk
-          PATH: $HOME/android-sdk/platform-tools:$HOME/android-sdk/cmdline-tools/latest/bin:$PATH
+          BUILDOZER_WARN_ON_ROOT: "0"
         run: |
           buildozer -v android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ElMariano-debug-apk
+          name: el-mariano-apk
           path: bin/*.apk
