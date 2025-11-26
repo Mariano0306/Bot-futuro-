@@ -1,56 +1,48 @@
 [app]
-# Nombre visible de la app
 title = El Mariano
-
-# Nombre interno de paquete
 package.name = elmariano
 package.domain = org.mariano
 
-# Carpeta donde está main.py
+# Carpeta del proyecto
 source.dir = .
-source.include_exts = py,kv,png,jpg,jpeg,svg,ttf,otf,wav,ogg,mp3
-
-# Versión
-version = 0.1
-
-# LIBRERÍAS QUE USA TU main.py
-requirements = python3,kivy,kivy_garden.mapview,plyer
-
-# Archivo principal
+source.include_exts = py, kv, png, jpg, jpeg, svg, ttf, otf, wav, ogg, mp3
 source.main = main.py
 
-# Orientación horizontal
-orientation = landscape
+# Versión de la app
+version = 0.1
 
-# Pantalla completa
+# Requisitos con versiones correctas para Android
+requirements = python3==3.10.5, kivy==2.1.0, kivy_garden.mapview, plyer
+
+orientation = landscape
 fullscreen = 1
 
-# Permisos Android (GPS + internet para los mapas)
-android.permissions = INTERNET,ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION
+# Permisos Android
+android.permissions = INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION
 
-# Nivel de log
+# Nivel de logs
 log_level = 2
-
-# ---------- CONFIG ANDROID ----------
-android.api = 33
-android.minapi = 21
-android.sdk = 33
-android.ndk = 25b
-android.ndk_api = 21
-
-# Arquitecturas soportadas
-android.archs = arm64-v8a,armeabi-v7a
-
-# Usar Gradle
-android.build_type = gradle
-
-# Aceptar licencias del SDK automáticamente
-android.accept_sdk_license = True
-
-# Fijar versión de build-tools (para que encuentre aidl)
-android.build_tools_version = 33.0.2
-# ------------------------------------
 
 
 [buildozer]
 log_level = 2
+warn_on_root = 1
+
+
+[app:android]
+# API/NDK compatibles con Buildozer actual
+android.api = 33
+android.minapi = 21
+
+android.ndk = 25b
+android.ndk_api = 21
+
+# Arquitecturas soportadas
+android.archs = arm64-v8a, armeabi-v7a
+
+# Usar Gradle (obligatorio en 2024/2025)
+android.build_type = gradle
+
+# Evita errores de licencia del SDK
+android.accept_sdk_license = True
+android.accept_android_sdk_license = True
