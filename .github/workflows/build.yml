@@ -16,6 +16,7 @@ jobs:
     - name: Install system deps
       run: |
         sudo apt update
+        # IMPORTANTE: acá instalamos git además de pip, zip y unzip
         sudo apt install -y python3-pip git zip unzip
 
     - name: Install Java 17
@@ -28,6 +29,7 @@ jobs:
       run: |
         pip install --upgrade pip cython
         pip install buildozer
+        # agregar ~/.local/bin al PATH para que el comando buildozer se pueda usar
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Install Android SDK + Build-tools
@@ -35,6 +37,7 @@ jobs:
         mkdir -p $HOME/android-sdk
         cd $HOME/android-sdk
 
+        # herramientas de línea de comando del SDK
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
         unzip tools.zip -d cmdline-tools
         mv cmdline-tools/cmdline-tools cmdline-tools/latest
