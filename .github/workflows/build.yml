@@ -3,8 +3,7 @@ name: Build APK - El Mariano
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
@@ -29,6 +28,7 @@ jobs:
       run: |
         pip install --upgrade pip cython
         pip install buildozer
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Install Android SDK + Build-tools
       run: |
@@ -50,7 +50,7 @@ jobs:
     - name: Build APK (debug)
       env:
         ANDROID_HOME: ${{ runner.home }}/android-sdk
-        PATH: ${{ runner.home }}/android-sdk/cmdline-tools/latest/bin:${{ runner.home }}/android-sdk/platform-tools:${{ env.PATH }}
+        PATH: ${{ runner.home }}/.local/bin:${{ runner.home }}/android-sdk/cmdline-tools/latest/bin:${{ runner.home }}/android-sdk/platform-tools:${{ env.PATH }}
       run: |
         buildozer android debug
 
