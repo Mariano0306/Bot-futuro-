@@ -17,8 +17,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y python3-pip git zip unzip
-        echo "===== git version ====="
-        git --version || echo "git NO disponible"
+        echo "===== git ====="
+        git --version
         which git || echo "git no está en PATH"
 
     - name: Install Java 17
@@ -31,45 +31,52 @@ jobs:
       run: |
         pip install --upgrade pip cython
         pip install buildozer
-        # agregamos ~/.local/bin al PATH global del runner
+        # Añadimos ~/.local/bin al PATH del runner
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Install Android SDK + Build-tools
       run: |
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
+        # Usamos EXACTAMENTE la ruta que Buildozer utiliza
+        SDK_ROOT="$HOME/.buildozer/android/platform/android-sdk"
+        mkdir -p "$SDK_ROOT"
+        cd "$SDK_ROOT"
 
-        # herramientas de línea de comando del SDK
+        echo "Instalando commandline-tools en $SDK_ROOT"
+
+        # Herramientas de línea de comando del SDK
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
         unzip tools.zip -d cmdline-tools
         mv cmdline-tools/cmdline-tools cmdline-tools/latest
 
-        export ANDROID_HOME=$HOME/android-sdk
+        export ANDROID_HOME="$SDK_ROOT"
+        export ANDROID_SDK_ROOT="$SDK_ROOT"
         export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
 
         yes | sdkmanager --licenses
+
         sdkmanager "platforms;android-33"
         sdkmanager "platform-tools"
         sdkmanager "build-tools;33.0.2"
 
+        echo "Contenido de $ANDROID_HOME/build-tools:"
+        ls -R "$ANDROID_HOME/build-tools" || echo "No hay build-tools instalados"
+
     - name: Build APK (debug)
       env:
-        ANDROID_HOME: ${{ runner.home }}/android-sdk
+        ANDROID_HOME: ${{ runner.home }}/.buildozer/android/platform/android-sdk
+        ANDROID_SDK_ROOT: ${{ runner.home }}/.buildozer/android/platform/android-sdk
       run: |
-        echo "===== PATH antes de modificarlo ====="
-        echo "$PATH"
-        echo "git encontrado en:"
-        which git || echo "git no está en PATH"
+        echo "ANDROID_HOME = $ANDROID_HOME"
+        echo "PATH inicial = $PATH"
 
-        # ahora sí sumamos lo de Android y Buildozer al PATH existente
+        # Sumamos Buildozer + Android al PATH (sin borrar lo demás)
         export PATH="$HOME/.local/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 
-        echo "===== PATH después de modificarlo ====="
-        echo "$PATH"
-        echo "git después de export PATH:"
-        which git || echo "git no está en PATH"
+        echo "PATH final = $PATH"
+        echo "build-tools instalados:"
+        ls -R "$ANDROID_HOME/build-tools" || echo "No hay build-tools"
 
-        # construir APK
+        # Compilar APK
         buildozer android debug
 
     - name: Upload APK artifact
