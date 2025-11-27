@@ -1,41 +1,56 @@
 name: Build APK - El Mariano
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            python3-setuptools python3-pip \
-            git openjdk-17-jdk \
-            libffi-dev libssl-dev \
-            pkg-config
+    - name: Install system deps
+      run: |
+        sudo apt update
+        sudo apt install -y python3-pip git zip unzip openjdk-17-jdk
 
-      - name: Install Buildozer
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install "cython==0.29.36"
-          python3 -m pip install buildozer
+    - name: Install Buildozer
+      run: |
+        pip install --upgrade cython
+        pip install buildozer
+        
+    - name: Install Android SDK + Build-tools
+      run: |
+        mkdir -p $HOME/android-sdk
+        cd $HOME/android-sdk
 
-      - name: Build APK (debug)
-        env:
-          BUILDOZER_WARN_ON_ROOT: "0"
-        run: |
-          buildozer -v android debug
+        # Descargar commandline-tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
+        unzip tools.zip -d cmdline-tools
+        mv cmdline-tools/cmdline-tools cmdline-tools/latest
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: el-mariano-apk
-          path: bin/*.apk
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+
+        yes | sdkmanager --licenses
+        sdkmanager "platforms;android-33"
+        sdkmanager "platform-tools"
+        sdkmanager "build-tools;33.0.2"
+
+    - name: Build APK (debug)
+      env:
+        ANDROID_HOME: ${{ runner.home }}/android-sdk
+        PATH: ${{ runner.home }}/android-sdk/cmdline-tools/latest/bin:${{ runner.home }}/android-sdk/platform-tools:${{ env.PATH }}
+      run: |
+        buildozer android debug
+
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: el-mariano-apk
+        path: bin/*.apk
