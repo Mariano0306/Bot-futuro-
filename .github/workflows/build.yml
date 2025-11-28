@@ -20,19 +20,19 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y python3-pip git zip unzip
 
-    # 3) Java (para el SDK / Gradle)
+    # 3) Java (para Gradle/SDK)
     - name: Install Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    # 4) Buildozer (desde pip del usuario)
-    - name: Install Buildozer
+    # 4) Buildozer + Cython
+    - name: Install Buildozer + Cython
       run: |
         pip install --upgrade pip
+        pip install cython==0.29.36
         pip install buildozer
-        # añadir ~/.local/bin al PATH global del workflow
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     # 5) SDK de Android y Build-tools en la ruta que usa Buildozer
@@ -42,9 +42,6 @@ jobs:
         mkdir -p "$SDK_ROOT"
         cd "$SDK_ROOT"
 
-        echo "Instalando commandline-tools en $SDK_ROOT"
-
-        # Herramientas de línea de comando de Android
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
         unzip tools.zip -d cmdline-tools
         mv cmdline-tools/cmdline-tools cmdline-tools/latest
@@ -53,19 +50,11 @@ jobs:
         export ANDROID_SDK_ROOT="$SDK_ROOT"
         export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
 
-        # Aceptar licencias
         yes | sdkmanager --licenses
-
-        # Instalar lo que necesita Buildozer
         sdkmanager "platforms;android-33" "platform-tools" "build-tools;33.0.2"
 
-        # TRUCO IMPORTANTE:
-        # Buildozer busca sdkmanager en tools/bin, así que le copiamos ahí el binario
         mkdir -p "$ANDROID_HOME/tools/bin"
         cp "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "$ANDROID_HOME/tools/bin/"
-
-        echo "Contenido de $ANDROID_HOME:"
-        ls -R "$ANDROID_HOME"
 
     # 6) Compilar la APK
     - name: Build APK (debug)
@@ -73,11 +62,7 @@ jobs:
         ANDROID_HOME: ${{ runner.home }}/.buildozer/android/platform/android-sdk
         ANDROID_SDK_ROOT: ${{ runner.home }}/.buildozer/android/platform/android-sdk
       run: |
-        # PATH con buildozer + sdkmanager + platform-tools
         export PATH="$HOME/.local/bin:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
-        echo "ANDROID_HOME = $ANDROID_HOME"
-        echo "PATH = $PATH"
-
         buildozer android debug
 
     # 7) Subir la APK generada
