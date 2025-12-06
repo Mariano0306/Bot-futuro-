@@ -16,10 +16,11 @@ jobs:
       - name: Build APK with Docker
         run: |
           docker run --rm \
+            -e BUILDOZER_ALLOW_ROOT=1 \
             -v "$PWD":/home/user/app \
             -w /home/user/app \
             kivy/buildozer \
-            bash -lc "export BUILDOZER_ALLOW_ROOT=1; printf 'y\n' | buildozer -v android debug"
+            buildozer -v android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
