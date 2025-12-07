@@ -13,17 +13,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Build APK with Docker (non-root)
+      # Paso único: usar la imagen oficial de Kivy/Buildozer
+      - name: Build APK with Docker
+        env:
+          BUILDOZER_ALLOW_ROOT: "1"
         run: |
           docker run --rm \
-            --user 1000:1000 \
+            -e BUILDOZER_ALLOW_ROOT=$BUILDOZER_ALLOW_ROOT \
             -v "$PWD":/home/user/app \
             -w /home/user/app \
             kivy/buildozer \
-            bash -lc "buildozer -v android debug"
+            buildozer android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: elmariano-apk
-          path: .buildozer/android/platform/*/dists/*/bin/*.apk
+          name: el-mariano-apk
+          path: bin/*.apk
