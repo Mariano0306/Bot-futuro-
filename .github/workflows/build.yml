@@ -1,32 +1,30 @@
-name: Build APK - El Mariano
+name: Build APK
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # 1) Descargar el repo
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Paso único: usar la imagen oficial de Kivy/Buildozer
+      # 2) Construir APK dentro del contenedor oficial de Buildozer
       - name: Build APK with Docker
-        env:
-          BUILDOZER_ALLOW_ROOT: "1"
         run: |
           docker run --rm \
-            -e BUILDOZER_ALLOW_ROOT=$BUILDOZER_ALLOW_ROOT \
-            -v "$PWD":/home/user/app \
+            -v ${{ github.workspace }}:/home/user/app \
             -w /home/user/app \
+            -e BUILDOZER_ALLOW_ROOT=1 \
             kivy/buildozer \
-            buildozer android debug
+            bash -lc "printf 'y\n' | buildozer -v android debug"
 
+      # 3) Subir el APK generado como artefacto
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: el-mariano-apk
+          name: ElMariano-apk
           path: bin/*.apk
