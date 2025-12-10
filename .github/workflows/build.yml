@@ -75,7 +75,8 @@ jobs:
             cmake \
             libffi-dev \
             libssl-dev \
-            automake
+            automake \
+            gettext
 
       # 4) Java 17 (para Gradle/SDK Android)
       - name: Setup Java 17
