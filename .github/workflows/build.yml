@@ -102,7 +102,17 @@ jobs:
         env:
           APP_ANDROID_ACCEPT_SDK_LICENSE: "1"
         run: |
-          yes | buildozer -v android debug
+          # Ejecuta buildozer; si falla, muestra el log interno de p4a
+          buildozer -v android debug || (
+            echo "------ ÚLTIMAS 120 LÍNEAS DEL LOG DE python-for-android ------"
+            LOGFILE=$(find .buildozer -name "log.txt" | head -n 1 || true)
+            if [ -n "$LOGFILE" ]; then
+              tail -n 120 "$LOGFILE"
+            else
+              echo "No se encontró log.txt de python-for-android"
+            fi
+            exit 1
+          )
 
       # 8) Subir el APK generado como artefacto
       - name: Upload APK artifact
