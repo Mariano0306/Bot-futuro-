@@ -97,26 +97,27 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "buildozer>=1.5.0" "Cython==0.29.33"
 
-      # 7) Compilar APK con Buildozer
+      # 7) Compilar APK con Buildozer, guardando el log completo
       - name: Build APK with Buildozer
         env:
           APP_ANDROID_ACCEPT_SDK_LICENSE: "1"
         run: |
-          # Ejecuta buildozer; si falla, muestra el log interno de p4a
-          buildozer -v android debug || (
-            echo "------ ÚLTIMAS 120 LÍNEAS DEL LOG DE python-for-android ------"
-            LOGFILE=$(find .buildozer -name "log.txt" | head -n 1 || true)
-            if [ -n "$LOGFILE" ]; then
-              tail -n 120 "$LOGFILE"
-            else
-              echo "No se encontró log.txt de python-for-android"
-            fi
-            exit 1
-          )
+          set -o pipefail
+          touch buildozer.log
+          buildozer -v android debug 2>&1 | tee buildozer.log
 
-      # 8) Subir el APK generado como artefacto
+      # 8) Subir el APK generado como artefacto (si existiera)
       - name: Upload APK artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: el-mariano-apk
           path: bin/*.apk
+
+      # 9) Subir el log de Buildozer SIEMPRE, aunque falle
+      - name: Upload Buildozer log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-log
+          path: buildozer.log
