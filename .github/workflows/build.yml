@@ -1,39 +1,29 @@
-name: Build for Android
+name: Build APK with Buildozer
 
 on:
   push:
     branches:
-      - main          # cambia "main" si tu rama principal tiene otro nombre
-  workflow_dispatch:  # para lanzarlo a mano desde Actions
+      - main
+  workflow_dispatch:
 
 jobs:
   build-android:
-    name: Build for Android
     runs-on: ubuntu-latest
+    name: Build Android APK
 
     steps:
-      # 1) Descargar el repo
-      - name: Checkout
+      # 1) Clonar repositorio
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2) Cache para acelerar builds
-      - name: Get Date
-        id: get-date
-        run: echo "date=$(date -u +'%Y%m%d')" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Buildozer global directory
-        uses: actions/cache@v4
-        with:
-          path: .buildozer_global
-          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
-
-      - name: Cache .buildozer (por proyecto)
+      # 2) Cache buildozer (acelera builds)
+      - name: Cache .buildozer
         uses: actions/cache@v4
         with:
           path: .buildozer
-          key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
+          key: buildozer-${{ hashFiles('buildozer.spec') }}
 
-      # 3) Instalar dependencias de sistema
+      # 3) Dependencias del sistema
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -67,6 +57,7 @@ jobs:
             zip \
             unzip \
             autoconf \
+            automake \
             libtool \
             pkg-config \
             libncurses5-dev \
@@ -75,49 +66,48 @@ jobs:
             cmake \
             libffi-dev \
             libssl-dev \
-            automake \
             gettext
 
-      # 4) Java 17 (para Gradle/SDK Android)
-      - name: Setup Java 17
+      # 4) Java 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # 5) Python compatible con Buildozer
+      # 5) Python 3.10 (compatible con Buildozer)
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 6) Instalar Buildozer y Cython
-      - name: Install Python dependencies
+      # 6) Instalar Buildozer
+      - name: Install Buildozer
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "buildozer>=1.5.0" "Cython==0.29.33"
+          pip install buildozer Cython==0.29.33
 
-      # 7) Compilar APK con Buildozer, guardando el log completo
+      # 7) Build APK (clean + debug)
       - name: Build APK with Buildozer
         env:
           APP_ANDROID_ACCEPT_SDK_LICENSE: "1"
+          USE_SYSTEM_LIBFFI: "1"
         run: |
-          set -o pipefail
-          touch buildozer.log
-          buildozer -v android debug 2>&1 | tee buildozer.log
+          buildozer android clean
+          buildozer -v android debug
 
-      # 8) Subir el APK generado como artefacto (si existiera)
-      - name: Upload APK artifact
+      # 8) Subir APK generado
+      - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: el-mariano-apk
+          name: apk-debug
           path: bin/*.apk
 
-      # 9) Subir el log de Buildozer SIEMPRE, aunque falle
-      - name: Upload Buildozer log
+      # 9) Subir logs SIEMPRE
+      - name: Upload Buildozer logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: buildozer-log
-          path: buildozer.log
+          name: buildozer-logs
+          path: .buildozer
