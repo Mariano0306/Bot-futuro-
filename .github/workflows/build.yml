@@ -1,4 +1,4 @@
-name: Build APK with Buildozer
+name: Build Android APK
 
 on:
   push:
@@ -7,87 +7,41 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-android:
-    runs-on: ubuntu-latest
-    name: Build Android APK
+  build:
+    runs-on: ubuntu-22.04
 
     steps:
-      # 1) Clonar repositorio
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2) Cache buildozer (acelera builds)
-      - name: Cache .buildozer
-        uses: actions/cache@v4
-        with:
-          path: .buildozer
-          key: buildozer-${{ hashFiles('buildozer.spec') }}
-
-      # 3) Dependencias del sistema
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            git \
-            ffmpeg \
-            libsdl2-dev \
-            libsdl2-image-dev \
-            libsdl2-mixer-dev \
-            libsdl2-ttf-dev \
-            libportmidi-dev \
-            libswscale-dev \
-            libavformat-dev \
-            libavcodec-dev \
-            libunwind-dev \
-            zlib1g-dev \
-            libsqlite3-dev \
-            sqlite3 \
-            bzip2 \
-            libbz2-dev \
-            openssl \
-            libgdbm-dev \
-            libgdbm-compat-dev \
-            liblzma-dev \
-            libreadline-dev \
-            uuid-dev \
-            libgstreamer1.0-0 \
-            gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good \
-            zip \
-            unzip \
-            autoconf \
-            automake \
-            libtool \
-            pkg-config \
-            libncurses5-dev \
-            libncursesw5-dev \
-            libtinfo6 \
-            cmake \
-            libffi-dev \
-            libssl-dev \
-            gettext
-
-      # 4) Java 17
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      # 5) Python 3.10 (compatible con Buildozer)
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
-      # 6) Instalar Buildozer
-      - name: Install Buildozer
+      - name: Install system dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install buildozer Cython==0.29.33
+          sudo apt update
+          sudo apt install -y \
+            git zip unzip openjdk-17-jdk \
+            python3-pip python3-venv \
+            libffi-dev libssl-dev \
+            build-essential \
+            libncurses5 \
+            libstdc++6 \
+            zlib1g-dev \
+            libsqlite3-dev
 
-      # 7) Build APK (clean + debug)
+      - name: Install Buildozer and p4a
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.36
+          pip install python-for-android
+
+      - name: Prepare buildozer directory
+        run: |
+          buildozer init || true
+
       - name: Build APK with Buildozer
         env:
           APP_ANDROID_ACCEPT_SDK_LICENSE: "1"
@@ -96,17 +50,13 @@ jobs:
           buildozer android clean
           buildozer -v android debug
 
-      # 8) Subir APK generado
       - name: Upload APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: apk-debug
+          name: APK
           path: bin/*.apk
 
-      # 9) Subir logs SIEMPRE
       - name: Upload Buildozer logs
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: buildozer-logs
