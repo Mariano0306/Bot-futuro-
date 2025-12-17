@@ -1,80 +1,72 @@
 [app]
 
-# Nombre visible de la app
-title = Dale que hacés platita
+# Nombre de la aplicación
+title = El Mariano
 
-# Nombre del paquete (NO cambiar después de publicar)
-package.name = dalequehacesplatita
+# Nombre del paquete (NO usar mayúsculas)
+package.name = elmariano
 package.domain = org.mariano
 
 # Archivo principal
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json,txt,yaml
+source.include_exts = py,png,jpg,kv,atlas,json,yaml
 
 # Versión
 version = 1.0
 
 # Requerimientos Python
+# NO agregar python-for-android acá
 requirements = python3,kivy,requests,pyyaml
 
-# Pantalla
+# Archivo de entrada
+entrypoint = main.py
+
+# Orientación
 orientation = portrait
-fullscreen = 0
 
-# Icono (si no tenés, comentá la línea)
-# icon.filename = %(source.dir)s/icon.png
+# Pantalla completa
+fullscreen = 1
 
-# Splash (opcional)
-# presplash.filename = %(source.dir)s/splash.png
-
-
-[buildozer]
-
-log_level = 2
-warn_on_root = 1
-
-
-[android]
-
-# API recomendada y estable
-android.api = 31
-android.minapi = 21
-
-# Arquitecturas
-android.arch = armeabi-v7a, arm64-v8a
-
-# Fuerza uso de AndroidX
-android.use_androidx = True
-
-# PERMISOS (agregá más si necesitás)
+# Permisos Android
 android.permissions = INTERNET,ACCESS_NETWORK_STATE
 
-# === SOLUCIÓN AL ERROR DEL 15% / libffi ===
-android.environment = USE_SYSTEM_LIBFFI=1
+# ===== ANDROID =====
 
-# Versión estable de python-for-android
+# API y SDK (ESTO ES CLAVE)
+android.api = 33
+android.minapi = 21
+android.sdk = 24
+android.ndk = 25b
+
+# Rama estable de python-for-android
 p4a.branch = v2023.09.24
 
-# No usar recetas locales
-p4a.local_recipes =
+# Arquitecturas soportadas
+android.archs = arm64-v8a,armeabi-v7a
 
-# Limpieza controlada
-android.skip_update = False
+# Aceptar licencias automáticamente
+android.accept_sdk_license = True
 
-# Logs completos
-android.logcat_filters = *:S python:D
+# Evita errores de compilación
+android.enable_androidx = True
 
-# Java
+# Logs útiles
+log_level = 2
+
+# ===== BUILD =====
+
+# No usar gradle propio
 android.gradle_dependencies =
-android.enable_r8 = True
 
+# Optimización
+android.release_artifact = apk
 
-[graphics]
+# Limpieza automática
+android.clean_intermediate = True
 
-# DPI adaptable
-resizable = 1
+# ===== DEBUG =====
 
+# Mantener consola activa
+android.debuggable = True
 
-[input]
-
-mouse = mouse
+# ===== FIN =====
