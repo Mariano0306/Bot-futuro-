@@ -25,19 +25,31 @@ jobs:
           libffi-dev \
           libssl-dev
 
+    - name: Install Android SDK cmdline-tools
+      run: |
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip commandlinetools-linux-11076708_latest.zip
+        mv cmdline-tools cmdline-tools/latest
+
+    - name: Setup Android SDK and install build-tools
+      run: |
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+
+        yes | sdkmanager --licenses
+        sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
     - name: Install Buildozer
       run: |
         pip3 install --upgrade pip
         pip3 install buildozer cython
 
-    - name: Accept Android SDK licenses
-      run: |
-        mkdir -p $HOME/.android
-        echo "y" | sdkmanager --licenses || true
-
     - name: Build APK
       env:
-        ANDROID_HOME: $HOME/.buildozer/android/platform/android-sdk
+        ANDROID_HOME: $HOME/android-sdk
+        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
       run: |
         buildozer android debug
 
