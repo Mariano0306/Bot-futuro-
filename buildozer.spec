@@ -1,59 +1,58 @@
 [app]
 
-title = El Mariano
-package.name = elmariano
+title = Bot Futuro
+package.name = botfuturo
 package.domain = org.mariano
 
 source.dir = .
-source.include_exts = py,png,jpg,kv,json,txt
+source.include_exts = py,png,jpg,kv,txt
 
 version = 0.1
 
-requirements = python3==3.10.9,kivy==2.2.1
+requirements = python3==3.10.12,kivy==2.2.1
 
 orientation = portrait
+
 fullscreen = 0
 
-icon.filename = %(source.dir)s/icon.png
-presplash.filename = %(source.dir)s/presplash.png
+icon.filename = icon.png
+presplash.filename = presplash.png
 
 log_level = 2
 
-android.permissions = INTERNET,ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION
+# Entry point
+entrypoint = main.py
 
-android.api = 31
-android.minapi = 21
-
-android.ndk = 25b
-android.ndk_api = 21
-
-android.accept_sdk_license = True
-
-android.archs = arm64-v8a,armeabi-v7a
-
-android.gradle_dependencies =
-android.enable_androidx = True
-
-android.private_storage = True
-
-android.allow_backup = True
-
-android.manifest.application_attributes = android:usesCleartextTraffic="true"
-
-android.debuggable = True
-
-android.copy_libs = 1
 
 [buildozer]
 
 log_level = 2
-warn_on_root = 1
+warn_on_root = 0
 
-[python]
 
-use_legacy_setup_py = False
+[app.android]
 
-[android]
+# API estable
+android.api = 31
+android.minapi = 21
 
-bootstrap = sdl2
-build_tools_version = 34.0.0
+# Arquitecturas
+android.archs = arm64-v8a,armeabi-v7a
+
+# SDK / NDK compatibles
+android.ndk = 25b
+android.sdk = 31
+
+# Java
+android.gradle_dependencies =
+
+# Permisos mínimos
+android.permissions = INTERNET
+
+# Evita errores de p4a
+android.allow_backup = True
+android.private_storage = True
+
+# Fuerza descarga limpia de p4a
+p4a.branch = develop
+p4a.bootstrap = sdl2
