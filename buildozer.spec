@@ -1,72 +1,59 @@
 [app]
 
-# Nombre de la aplicación
 title = El Mariano
-
-# Nombre del paquete (NO usar mayúsculas)
 package.name = elmariano
 package.domain = org.mariano
 
-# Archivo principal
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json,yaml
+source.include_exts = py,png,jpg,kv,json,txt
 
-# Versión
-version = 1.0
+version = 0.1
 
-# Requerimientos Python
-# NO agregar python-for-android acá
-requirements = python3,kivy,requests,pyyaml
+requirements = python3==3.10.9,kivy==2.2.1
 
-# Archivo de entrada
-entrypoint = main.py
-
-# Orientación
 orientation = portrait
+fullscreen = 0
 
-# Pantalla completa
-fullscreen = 1
+icon.filename = %(source.dir)s/icon.png
+presplash.filename = %(source.dir)s/presplash.png
 
-# Permisos Android
-android.permissions = INTERNET,ACCESS_NETWORK_STATE
-
-# ===== ANDROID =====
-
-# API y SDK (ESTO ES CLAVE)
-android.api = 33
-android.minapi = 21
-android.sdk = 24
-android.ndk = 25b
-
-# Rama estable de python-for-android
-p4a.branch = v2023.09.24
-
-# Arquitecturas soportadas
-android.archs = arm64-v8a,armeabi-v7a
-
-# Aceptar licencias automáticamente
-android.accept_sdk_license = True
-
-# Evita errores de compilación
-android.enable_androidx = True
-
-# Logs útiles
 log_level = 2
 
-# ===== BUILD =====
+android.permissions = INTERNET,ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION
 
-# No usar gradle propio
+android.api = 31
+android.minapi = 21
+
+android.ndk = 25b
+android.ndk_api = 21
+
+android.accept_sdk_license = True
+
+android.archs = arm64-v8a,armeabi-v7a
+
 android.gradle_dependencies =
+android.enable_androidx = True
 
-# Optimización
-android.release_artifact = apk
+android.private_storage = True
 
-# Limpieza automática
-android.clean_intermediate = True
+android.allow_backup = True
 
-# ===== DEBUG =====
+android.manifest.application_attributes = android:usesCleartextTraffic="true"
 
-# Mantener consola activa
 android.debuggable = True
 
-# ===== FIN =====
+android.copy_libs = 1
+
+[buildozer]
+
+log_level = 2
+warn_on_root = 1
+
+[python]
+
+use_legacy_setup_py = False
+
+[android]
+
+bootstrap = sdl2
+build_tools_version = 34.0.0
