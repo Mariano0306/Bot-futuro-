@@ -1,73 +1,48 @@
 [app]
 
-# =========================
-# Información básica
-# =========================
 title = Bot Futuro
 package.name = botfuturo
-package.domain = org.mariano
+package.domain = org.bot.futuro
 
 source.dir = .
-source.include_exts = py,png,jpg,kv,json,yaml
+source.include_exts = py,png,jpg,kv
 
 version = 0.1
 
-# Archivo principal
-entrypoint = main.py
+requirements = python3,kivy,requests
 
-# Icono (ya lo tenés)
+orientation = portrait
+
 icon.filename = icon.png
 
-# =========================
-# Requisitos Python
-# =========================
-requirements = python3,kivy
+fullscreen = 0
 
-# Forzar rama estable de python-for-android
-p4a.branch = stable
 
-# =========================
-# Permisos Android
-# =========================
-android.permissions = INTERNET,ACCESS_NETWORK_STATE
+# -------- ANDROID --------
 
-# =========================
-# Configuración ANDROID (CLAVE)
-# =========================
-
-# SOLO UNA arquitectura (evita cuelgues)
-android.arch = arm64-v8a
-
-# APIs compatibles y probadas
 android.api = 33
 android.minapi = 21
 
-# NDK estable (evita errores AIDL)
 android.ndk = 25.2.9519653
+android.ndk_api = 21
 
-# Evitar rebuilds innecesarios
-android.skip_update = True
+android.archs = arm64-v8a
 
-# No compilar tests de Python
+android.permissions = INTERNET
+
+android.allow_backup = True
+
+android.gradle_dependencies = 
+
 android.enable_androidx = True
 
-# =========================
-# Orientación y UI
-# =========================
-orientation = portrait
-fullscreen = 0
+android.use_androidx = True
 
-# =========================
-# Logging
-# =========================
+android.accept_sdk_license = True
+
+# 🔴 CLAVE PARA TU ERROR
+p4a.branch = stable
+p4a.force_build = True
+p4a.clean_build = False
+
 log_level = 2
-
-# =========================
-# Buildozer
-# =========================
-warn_on_root = 1
-
-# =========================
-# Extras (seguridad)
-# =========================
-android.allow_backup = False
