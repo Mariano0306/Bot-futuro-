@@ -1,58 +1,73 @@
 [app]
 
+# =========================
+# Información básica
+# =========================
 title = Bot Futuro
 package.name = botfuturo
 package.domain = org.mariano
 
 source.dir = .
-source.include_exts = py,png,jpg,kv,txt
+source.include_exts = py,png,jpg,kv,json,yaml
 
 version = 0.1
 
-requirements = python3==3.10.12,kivy==2.2.1
-
-orientation = portrait
-
-fullscreen = 0
-
-icon.filename = icon.png
-presplash.filename = presplash.png
-
-log_level = 2
-
-# Entry point
+# Archivo principal
 entrypoint = main.py
 
+# Icono (ya lo tenés)
+icon.filename = icon.png
 
-[buildozer]
+# =========================
+# Requisitos Python
+# =========================
+requirements = python3,kivy
 
-log_level = 2
-warn_on_root = 0
+# Forzar rama estable de python-for-android
+p4a.branch = stable
 
+# =========================
+# Permisos Android
+# =========================
+android.permissions = INTERNET,ACCESS_NETWORK_STATE
 
-[app.android]
+# =========================
+# Configuración ANDROID (CLAVE)
+# =========================
 
-# API estable
-android.api = 31
+# SOLO UNA arquitectura (evita cuelgues)
+android.arch = arm64-v8a
+
+# APIs compatibles y probadas
+android.api = 33
 android.minapi = 21
 
-# Arquitecturas
-android.archs = arm64-v8a,armeabi-v7a
+# NDK estable (evita errores AIDL)
+android.ndk = 25.2.9519653
 
-# SDK / NDK compatibles
-android.ndk = 25b
-android.sdk = 31
+# Evitar rebuilds innecesarios
+android.skip_update = True
 
-# Java
-android.gradle_dependencies =
+# No compilar tests de Python
+android.enable_androidx = True
 
-# Permisos mínimos
-android.permissions = INTERNET
+# =========================
+# Orientación y UI
+# =========================
+orientation = portrait
+fullscreen = 0
 
-# Evita errores de p4a
-android.allow_backup = True
-android.private_storage = True
+# =========================
+# Logging
+# =========================
+log_level = 2
 
-# Fuerza descarga limpia de p4a
-p4a.branch = develop
-p4a.bootstrap = sdl2
+# =========================
+# Buildozer
+# =========================
+warn_on_root = 1
+
+# =========================
+# Extras (seguridad)
+# =========================
+android.allow_backup = False
