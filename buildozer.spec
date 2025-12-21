@@ -2,47 +2,52 @@
 
 title = Bot Futuro
 package.name = botfuturo
-package.domain = org.bot.futuro
+package.domain = org.botfuturo
 
 source.dir = .
-source.include_exts = py,png,jpg,kv
+source.include_exts = py,yaml,json,txt,png
 
 version = 0.1
 
-requirements = python3,kivy,requests
+requirements = python3,kivy,requests,pyyaml
 
 orientation = portrait
 
-icon.filename = icon.png
-
 fullscreen = 0
 
+icon.filename = icon.png
 
-# -------- ANDROID --------
+log_level = 2
 
-android.api = 33
+
+[buildozer]
+
+log_level = 2
+warn_on_root = 1
+
+
+[android]
+
+android.api = 21
 android.minapi = 21
 
-android.ndk = 25.2.9519653
-android.ndk_api = 21
+# NO forzar ndk ni python-for-android
+# Esto es CLAVE para que no falle en GitHub Actions
 
 android.archs = arm64-v8a
 
-android.permissions = INTERNET
-
 android.allow_backup = True
 
-android.gradle_dependencies = 
+android.permissions = INTERNET
 
-android.enable_androidx = True
+android.debuggable = 1
 
-android.use_androidx = True
+android.gradle_dependencies =
 
 android.accept_sdk_license = True
 
-# 🔴 CLAVE PARA TU ERROR
-p4a.branch = stable
-p4a.force_build = True
-p4a.clean_build = False
 
-log_level = 2
+[graphics]
+
+width = 720
+height = 1280
