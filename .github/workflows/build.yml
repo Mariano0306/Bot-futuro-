@@ -33,7 +33,7 @@ jobs:
           libffi-dev libssl-dev \
           libsqlite3-dev \
           zlib1g-dev \
-          libncurses5
+          libncurses6
 
     - name: Install Buildozer
       run: |
